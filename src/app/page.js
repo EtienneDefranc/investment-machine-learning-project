@@ -1,15 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import StockForm from "@/components/StockForm";
 import PredictionResult from "@/components/PredictionResult";
 import StockCard from "@/components/StockCard";
 
 const POPULAR_STOCKS = [
-  { symbol: "AAPL", name: "Apple Inc.", icon: "🍎", trend: 1.2 },
-  { symbol: "TSLA", name: "Tesla, Inc.", icon: "⚡", trend: -0.5 },
-  { symbol: "NVDA", name: "NVIDIA Corp.", icon: "🎮", trend: 3.4 },
-  { symbol: "MSFT", name: "Microsoft", icon: "🪟", trend: 0.8 },
+  { symbol: "AAPL", name: "Apple Inc.", icon: "🍎" },
+  { symbol: "TSLA", name: "Tesla, Inc.", icon: "⚡" },
+  { symbol: "NVDA", name: "NVIDIA Corp.", icon: "🎮" },
+  { symbol: "MSFT", name: "Microsoft", icon: "🪟" },
 ];
 
 export default function Home() {
@@ -17,6 +17,28 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [activeSymbol, setActiveSymbol] = useState(null);
+  
+  // Dashboard Live Data State
+  const [dashboardData, setDashboardData] = useState({});
+
+  useEffect(() => {
+    // Fetch live dashboard data automatically in the background
+    const fetchDashboard = async () => {
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+        const response = await fetch(`${baseUrl}/api/dashboard`);
+        const data = await response.json();
+        
+        if (response.ok && data.status === "success") {
+          setDashboardData(data.data);
+        }
+      } catch (err) {
+        console.error("Failed to load dashboard data:", err);
+      }
+    };
+    
+    fetchDashboard();
+  }, []);
 
   const fetchPrediction = async (symbol) => {
     setActiveSymbol(symbol);
@@ -76,7 +98,7 @@ export default function Home() {
         {/* Dashboard Grid & Results */}
         {!result && !isLoading && !error ? (
           <div className="animate-fade-in">
-            <h2 className="text-xl font-bold mb-6 text-slate-200">Watchlist</h2>
+            <h2 className="text-xl font-bold mb-6 text-slate-200">Live Watchlist</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {POPULAR_STOCKS.map((stock) => (
                 <StockCard 
@@ -84,7 +106,7 @@ export default function Home() {
                   symbol={stock.symbol}
                   name={stock.name}
                   icon={stock.icon}
-                  trend={stock.trend}
+                  liveData={dashboardData[stock.symbol]}
                   onClick={fetchPrediction}
                   isLoading={isLoading}
                   isSelected={activeSymbol === stock.symbol}
@@ -118,7 +140,12 @@ export default function Home() {
                       : "bg-slate-800/50 text-slate-300 border-white/5 hover:bg-slate-700"
                     }`}
                 >
-                  {stock.symbol} {stock.trend > 0 ? "↗" : "↘"}
+                  {stock.symbol} 
+                  {dashboardData[stock.symbol] && (
+                    <span className={`ml-2 ${dashboardData[stock.symbol].trend_5d === "UP" ? "text-emerald-400" : "text-red-400"}`}>
+                      {dashboardData[stock.symbol].trend_5d === "UP" ? "↗" : "↘"}
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
