@@ -7,7 +7,7 @@ load_dotenv()
 
 ALPHA_VANTAGE_API_KEY = os.getenv("ALPHA_VANTAGE_API_KEY", "6WBC1LZRG04WO6CB") # Defaulting to the provided one
 
-def fetch_daily_data(symbol: str, outputsize: str = "full") -> pd.DataFrame:
+def fetch_daily_data(symbol: str, outputsize: str = "compact") -> pd.DataFrame:
     """
     Fetches daily time series data from Alpha Vantage for a given symbol.
     """
